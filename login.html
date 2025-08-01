@@ -5,6 +5,25 @@
   <title>Login - NOVA Racing</title>
   <link rel="stylesheet" href="css/styles.css" />
   <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .login-container {
+      background: #ffffff;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      width: 300px;
+      text-align: center;
+    }
+
     .logo-container {
       display: flex;
       align-items: center;
@@ -12,22 +31,55 @@
       margin-bottom: 2rem;
       gap: 1rem;
     }
+
     .logo-container img {
       height: 50px;
       width: 50px;
       object-fit: contain;
     }
+
     .logo-container h1 {
-      font-size: 2rem;
+      font-size: 1.5rem;
       color: #333;
-      font-weight: 700;
+      margin: 0;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+
+    .primary-btn {
+      width: 100%;
+      padding: 0.6rem;
+      background-color: #007bff;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .primary-btn:hover {
+      background-color: #0056b3;
+    }
+
+    .error {
+      color: red;
+      margin-top: 1rem;
+      font-size: 0.9rem;
     }
   </style>
 </head>
 <body>
-  <div class="container login-container">
+  <div class="login-container">
     <div class="logo-container">
-      <img src="images/logo.PNG" alt="NOVA Racing Logo" style="height: 60px;">
+      <img src="images/logo.png" alt="NOVA Racing Logo" />
       <h1>NOVA Racing</h1>
     </div>
 
@@ -40,12 +92,17 @@
   </div>
 
   <script>
-    const users = JSON.parse(localStorage.getItem('users') || '{}');
+    // Auto-create admin account if missing
+    let users = JSON.parse(localStorage.getItem('users') || '{}');
+    if (!users || Object.keys(users).length === 0) {
+      users = { admin: 'admin123' };
+      localStorage.setItem('users', JSON.stringify(users));
+    }
 
     const loginForm = document.getElementById('loginForm');
     const errorMsg = document.getElementById('errorMsg');
 
-    loginForm.addEventListener('submit', e => {
+    loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const username = document.getElementById('username').value.trim();
       const password = document.getElementById('password').value.trim();
@@ -61,11 +118,7 @@
       }
 
       localStorage.setItem('loggedInUser', username);
-      if (username === 'admin') {
-        window.location.href = 'admin.html';
-      } else {
-        window.location.href = 'index.html';
-      }
+      window.location.href = username === 'admin' ? 'admin.html' : 'index.html';
     });
   </script>
 </body>
