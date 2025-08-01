@@ -1,28 +1,24 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>NOVA Racing - Time Sheet</title>
   <link rel="stylesheet" href="css/styles.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#007bff" />
   <style>
-    body, html {
-      margin: 0; padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f0f2f5;
-      color: #222;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 20px;
+      color: #333;
     }
     header {
-      background-color: #007bff;
-      padding: 1.2rem 2rem;
-      color: white;
       display: flex;
       align-items: center;
       gap: 1rem;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+      margin-bottom: 20px;
     }
     header img {
       height: 50px;
@@ -30,93 +26,64 @@
       object-fit: contain;
     }
     header h1 {
-      font-size: 1.8rem;
+      font-size: 2rem;
       margin: 0;
-      font-weight: 700;
-    }
-    main {
-      flex-grow: 1;
-      max-width: 700px;
-      margin: 2rem auto;
-      background: white;
-      padding: 2rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      border-radius: 8px;
-    }
-    h2 {
       color: #007bff;
-      margin-bottom: 1rem;
     }
-    form {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      margin-bottom: 2rem;
-      align-items: center;
+    /* Style for timesheet form */
+    .timesheet-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: 600;
     }
     input[type="date"],
     input[type="time"] {
-      padding: 0.5rem;
-      font-size: 1rem;
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      box-sizing: border-box;
       border: 1px solid #ccc;
-      border-radius: 6px;
-      flex: 1 1 120px;
+      border-radius: 4px;
     }
-    button {
+    button.primary-btn {
+      margin-top: 15px;
+      padding: 10px 20px;
       background-color: #007bff;
-      color: white;
-      padding: 0.6rem 1.2rem;
       border: none;
-      border-radius: 6px;
+      color: white;
+      font-weight: 700;
+      border-radius: 5px;
       cursor: pointer;
-      font-weight: 600;
-      transition: background-color 0.3s ease;
-      flex-shrink: 0;
     }
-    button:hover {
+    button.primary-btn:hover {
       background-color: #0056b3;
     }
-    ul#timesheetList {
-      list-style: none;
-      padding-left: 0;
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
     }
-    ul#timesheetList li {
-      background: #e9f0ff;
-      padding: 0.8rem 1rem;
-      margin-bottom: 0.8rem;
-      border-radius: 6px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 1rem;
+    table, th, td {
+      border: 1px solid #ddd;
     }
-    ul#timesheetList li span {
-      flex-grow: 1;
+    th, td {
+      padding: 8px;
+      text-align: center;
     }
-    ul#timesheetList li button {
-      background-color: #dc3545;
-      padding: 0.4rem 0.8rem;
-      font-size: 0.9rem;
+    #exportBtn {
+      margin-bottom: 15px;
+      background-color: #28a745;
     }
-    ul#timesheetList li button.edit-btn {
-      background-color: #17a2b8;
-    }
-    #logoutBtn {
-      background-color: #6c757d;
-      position: fixed;
-      top: 1rem;
-      right: 1rem;
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
-      border: none;
-      color: white;
-      cursor: pointer;
-      font-weight: 600;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-      transition: background-color 0.3s ease;
-    }
-    #logoutBtn:hover {
-      background-color: #5a6268;
+    #exportBtn:hover {
+      background-color: #1e7e34;
     }
   </style>
 </head>
@@ -126,96 +93,107 @@
     <h1>NOVA Racing</h1>
   </header>
 
-  <button id="logoutBtn">Logout</button>
-
-  <main>
-    <h2>Time Sheet</h2>
-    <form id="timeForm">
-      <input type="date" id="dateInput" required />
-      <input type="time" id="startInput" required />
-      <input type="time" id="endInput" required />
-      <button type="submit" id="doneBtn">Done</button>
+  <div class="timesheet-container">
+    <button id="exportBtn" class="primary-btn">Export to Excel</button>
+    <form id="timeSheetForm">
+      <label for="date">Date</label>
+      <input type="date" id="date" required />
+      
+      <label for="startTime">Start Time</label>
+      <input type="time" id="startTime" required />
+      
+      <label for="endTime">End Time</label>
+      <input type="time" id="endTime" required />
+      
+      <button type="submit" class="primary-btn">Save Entry</button>
     </form>
 
-    <ul id="timesheetList"></ul>
-  </main>
+    <table id="timeSheetTable">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Start Time</th>
+          <th>End Time</th>
+          <th>Hours</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Entries will appear here -->
+      </tbody>
+    </table>
+  </div>
 
   <script>
-    const loggedInUser = localStorage.getItem('loggedInUser');
-    if (!loggedInUser || loggedInUser === 'admin') {
-      window.location.href = 'login.html';
-    }
+    const form = document.getElementById('timeSheetForm');
+    const tableBody = document.querySelector('#timeSheetTable tbody');
+    const exportBtn = document.getElementById('exportBtn');
 
-    const timesheetsKey = 'timesheets';
-    let timesheets = JSON.parse(localStorage.getItem(timesheetsKey) || '{}');
-    if (!timesheets[loggedInUser]) {
-      timesheets[loggedInUser] = [];
-      localStorage.setItem(timesheetsKey, JSON.stringify(timesheets));
-    }
+    // Load existing entries from localStorage
+    let entries = JSON.parse(localStorage.getItem('timesheetEntries') || '[]');
 
-    const timeForm = document.getElementById('timeForm');
-    const dateInput = document.getElementById('dateInput');
-    const startInput = document.getElementById('startInput');
-    const endInput = document.getElementById('endInput');
-    const timesheetList = document.getElementById('timesheetList');
-    const logoutBtn = document.getElementById('logoutBtn');
-
-    let editIndex = null;
-
-    function renderTimesheets() {
-      timesheetList.innerHTML = '';
-      timesheets[loggedInUser].forEach((entry, index) => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <span>${entry.date} — ${entry.startTime} to ${entry.endTime}</span>
-          <button class="edit-btn" onclick="editEntry(${index})">Edit</button>
-          <button onclick="deleteEntry(${index})">Delete</button>
+    function renderEntries() {
+      tableBody.innerHTML = '';
+      entries.forEach(entry => {
+        const tr = document.createElement('tr');
+        const hours = calculateHours(entry.startTime, entry.endTime);
+        tr.innerHTML = `
+          <td>${entry.date}</td>
+          <td>${entry.startTime}</td>
+          <td>${entry.endTime}</td>
+          <td>${hours.toFixed(2)}</td>
         `;
-        timesheetList.appendChild(li);
+        tableBody.appendChild(tr);
       });
     }
 
-    window.editEntry = function(index) {
-      const entry = timesheets[loggedInUser][index];
-      dateInput.value = entry.date;
-      startInput.value = entry.startTime;
-      endInput.value = entry.endTime;
-      editIndex = index;
-      document.getElementById('doneBtn').textContent = 'Save';
+    function calculateHours(start, end) {
+      const startDate = new Date('1970-01-01T' + start + 'Z');
+      const endDate = new Date('1970-01-01T' + end + 'Z');
+      let diff = (endDate - startDate) / (1000 * 60 * 60);
+      if (diff < 0) diff += 24; // handle overnight shifts
+      return diff;
     }
 
-    window.deleteEntry = function(index) {
-      if (confirm('Delete this time entry?')) {
-        timesheets[loggedInUser].splice(index, 1);
-        localStorage.setItem(timesheetsKey, JSON.stringify(timesheets));
-        renderTimesheets();
-      }
-    }
-
-    timeForm.addEventListener('submit', e => {
+    form.addEventListener('submit', e => {
       e.preventDefault();
-      const date = dateInput.value;
-      const startTime = startInput.value;
-      const endTime = endInput.value;
+      const date = document.getElementById('date').value;
+      const startTime = document.getElementById('startTime').value;
+      const endTime = document.getElementById('endTime').value;
 
-      if (editIndex !== null) {
-        timesheets[loggedInUser][editIndex] = { date, startTime, endTime };
-        editIndex = null;
-        document.getElementById('doneBtn').textContent = 'Done';
-      } else {
-        timesheets[loggedInUser].push({ date, startTime, endTime });
+      entries.push({ date, startTime, endTime });
+      localStorage.setItem('timesheetEntries', JSON.stringify(entries));
+      renderEntries();
+      form.reset();
+    });
+
+    exportBtn.addEventListener('click', () => {
+      if (!entries.length) {
+        alert('No entries to export.');
+        return;
       }
-      localStorage.setItem(timesheetsKey, JSON.stringify(timesheets));
-      timeForm.reset();
-      renderTimesheets();
+      // Generate CSV
+      let csv = 'Date,Start Time,End Time,Hours\n';
+      entries.forEach(e => {
+        const hours = calculateHours(e.startTime, e.endTime);
+        csv += `${e.date},${e.startTime},${e.endTime},${hours.toFixed(2)}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'timesheet.csv';
+      a.click();
+      URL.revokeObjectURL(url);
     });
 
-    logoutBtn.addEventListener('click', () => {
-      localStorage.removeItem('loggedInUser');
-      window.location.href = 'login.html';
-    });
+    renderEntries();
 
-    renderTimesheets();
+    // Register service worker for PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+        .then(() => console.log('Service Worker registered'))
+        .catch(err => console.error('Service Worker registration failed:', err));
+    }
   </script>
 </body>
 </html>
