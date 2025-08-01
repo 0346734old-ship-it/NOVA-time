@@ -8,169 +8,175 @@
   <meta name="theme-color" content="#007bff" />
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f9fafb;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f6f8;
       margin: 0;
       padding: 20px;
-      color: #222;
     }
     header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
     }
-    .logo-title {
+    .logo-container {
       display: flex;
       align-items: center;
-      gap: 15px;
+      gap: 10px;
     }
-    .logo-title img {
+    .logo-container img {
       height: 50px;
-      width: 50px;
-      object-fit: contain;
     }
-    .logo-title h1 {
-      font-size: 2.25rem;
-      color: #007bff;
+    .logo-container h1 {
+      font-size: 24px;
       margin: 0;
-      font-weight: 700;
+      color: #007bff;
     }
-    #exportBtn {
-      background-color: #28a745;
-      color: white;
-      font-weight: 700;
+    button {
+      padding: 10px 15px;
       border: none;
-      padding: 12px 24px;
-      border-radius: 8px;
+      border-radius: 5px;
       cursor: pointer;
-      font-size: 1rem;
-      transition: background-color 0.25s ease;
+      font-weight: bold;
     }
-    #exportBtn:hover {
-      background-color: #1e7e34;
-    }
-    #logoutBtn {
-      background-color: #dc3545;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 700;
-      font-size: 1rem;
-      transition: background-color 0.25s ease;
-    }
-    #logoutBtn:hover {
-      background-color: #a71d2a;
-    }
-    main {
+    .danger { background-color: #dc3545; color: white; }
+    .success { background-color: #28a745; color: white; }
+    .blue { background-color: #007bff; color: white; }
+    .form-section {
+      margin-bottom: 20px;
+      padding: 20px;
       background: white;
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-    }
-    h2 {
-      margin-top: 0;
-      margin-bottom: 15px;
-      color: #333;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 1rem;
+      background: white;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      border-radius: 10px;
+      overflow: hidden;
     }
     th, td {
-      padding: 12px 15px;
-      border-bottom: 1px solid #ddd;
+      padding: 12px;
+      border-bottom: 1px solid #eee;
       text-align: left;
     }
-    th {
-      background-color: #007bff;
-      color: white;
-      font-weight: 600;
-    }
-    tr:hover {
-      background-color: #f1f5f9;
-    }
+    th { background: #007bff; color: white; }
+    tr:hover { background: #f1f1f1; }
   </style>
 </head>
 <body>
   <header>
-    <div class="logo-title">
-      <img src="images/logo.png" alt="NOVA Racing Logo" />
+    <div class="logo-container">
+      <img src="images/logo.png" alt="NOVA Racing Logo">
       <h1>Admin Panel - NOVA Racing</h1>
     </div>
     <div>
-      <button id="exportBtn">Export Users to CSV</button>
-      <button id="logoutBtn">Logout</button>
+      <button class="success" id="exportBtn">Export to Excel</button>
+      <button class="danger" onclick="logout()">Logout</button>
     </div>
   </header>
 
-  <main>
-    <h2>Registered Users</h2>
-    <table id="usersTable">
-      <thead>
-        <tr>
-          <th>Username</th>
-          <th>Password</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Users inserted here -->
-      </tbody>
-    </table>
-  </main>
+  <div class="form-section">
+    <h2>Create New User</h2>
+    <input type="text" id="newUsername" placeholder="Username">
+    <input type="password" id="newPassword" placeholder="Password">
+    <button class="blue" onclick="addUser()">Add User</button>
+  </div>
+
+  <div class="form-section">
+    <h2>Change Password</h2>
+    <input type="text" id="changeUser" placeholder="Username">
+    <input type="password" id="newUserPassword" placeholder="New Password">
+    <button class="blue" onclick="changePassword()">Change</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Password</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="userTable"></tbody>
+  </table>
 
   <script>
-    const users = JSON.parse(localStorage.getItem('users') || '{}');
-    const tbody = document.querySelector('#usersTable tbody');
+    const userTable = document.getElementById('userTable');
+
+    function getUsers() {
+      return JSON.parse(localStorage.getItem('users') || '{}');
+    }
+
+    function saveUsers(users) {
+      localStorage.setItem('users', JSON.stringify(users));
+    }
 
     function renderUsers() {
-      tbody.innerHTML = '';
-      for (const [username, password] of Object.entries(users)) {
+      const users = getUsers();
+      userTable.innerHTML = '';
+      for (let username in users) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${username}</td>
-          <td>${password}</td>
+          <td>${users[username]}</td>
+          <td><button class="danger" onclick="deleteUser('${username}')">Delete</button></td>
         `;
-        tbody.appendChild(tr);
+        userTable.appendChild(tr);
       }
+    }
+
+    function addUser() {
+      const username = document.getElementById('newUsername').value.trim();
+      const password = document.getElementById('newPassword').value.trim();
+      if (!username || !password) return alert('Fill in both fields.');
+      const users = getUsers();
+      if (users[username]) return alert('User already exists.');
+      users[username] = password;
+      saveUsers(users);
+      renderUsers();
+    }
+
+    function changePassword() {
+      const username = document.getElementById('changeUser').value.trim();
+      const newPassword = document.getElementById('newUserPassword').value.trim();
+      const users = getUsers();
+      if (!users[username]) return alert('User does not exist.');
+      users[username] = newPassword;
+      saveUsers(users);
+      renderUsers();
+    }
+
+    function deleteUser(username) {
+      const users = getUsers();
+      if (!confirm(`Delete user ${username}?`)) return;
+      delete users[username];
+      saveUsers(users);
+      renderUsers();
+    }
+
+    function logout() {
+      localStorage.removeItem('loggedInUser');
+      window.location.href = 'login.html';
     }
 
     document.getElementById('exportBtn').addEventListener('click', () => {
-      if (Object.keys(users).length === 0) {
-        alert('No users to export.');
-        return;
-      }
+      const users = getUsers();
       let csv = 'Username,Password\n';
-      for (const [username, password] of Object.entries(users)) {
-        csv += `${username},${password}\n`;
+      for (let user in users) {
+        csv += `${user},${users[user]}\n`;
       }
-      const blob = new Blob([csv], {type: 'text/csv'});
-      const url = URL.createObjectURL(blob);
+      const blob = new Blob([csv], { type: 'text/csv' });
       const a = document.createElement('a');
-      a.href = url;
+      a.href = URL.createObjectURL(blob);
       a.download = 'users.csv';
       a.click();
-      URL.revokeObjectURL(url);
     });
 
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      localStorage.removeItem('loggedInUser');
-      window.location.href = 'login.html';
-    });
-
+    // Initial
     renderUsers();
-
-    // Service Worker for PWA
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js')
-        .then(() => console.log('Service Worker registered'))
-        .catch(err => console.error('Service Worker registration failed:', err));
-    }
   </script>
 </body>
 </html>
