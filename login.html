@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login - NOVA Racing</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .logo-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 2rem;
+      gap: 1rem;
+    }
+    .logo-container img {
+      height: 50px;
+      width: 50px;
+      object-fit: contain;
+    }
+    .logo-container h1 {
+      font-size: 2rem;
+      color: #333;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="container login-container">
+    <div class="logo-container">
+      <img src="images/logo.png" alt="NOVA Racing Logo" />
+      <h1>NOVA Racing</h1>
+    </div>
+
+    <form id="loginForm">
+      <input type="text" id="username" placeholder="Username" autocomplete="username" required />
+      <input type="password" id="password" placeholder="Password" autocomplete="current-password" required />
+      <button type="submit" class="primary-btn">Login</button>
+      <p id="errorMsg" class="error"></p>
+    </form>
+  </div>
+
+  <script>
+    const users = JSON.parse(localStorage.getItem('users') || '{}');
+
+    const loginForm = document.getElementById('loginForm');
+    const errorMsg = document.getElementById('errorMsg');
+
+    loginForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      if (!users[username]) {
+        errorMsg.textContent = 'User not found.';
+        return;
+      }
+
+      if (users[username] !== password) {
+        errorMsg.textContent = 'Incorrect password.';
+        return;
+      }
+
+      localStorage.setItem('loggedInUser', username);
+      if (username === 'admin') {
+        window.location.href = 'admin.html';
+      } else {
+        window.location.href = 'index.html';
+      }
+    });
+  </script>
+</body>
+</html>

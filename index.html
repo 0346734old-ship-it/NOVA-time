@@ -1,0 +1,221 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>NOVA Racing - Time Sheet</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    body, html {
+      margin: 0; padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f2f5;
+      color: #222;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background-color: #007bff;
+      padding: 1.2rem 2rem;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    }
+    header img {
+      height: 50px;
+      width: 50px;
+      object-fit: contain;
+    }
+    header h1 {
+      font-size: 1.8rem;
+      margin: 0;
+      font-weight: 700;
+    }
+    main {
+      flex-grow: 1;
+      max-width: 700px;
+      margin: 2rem auto;
+      background: white;
+      padding: 2rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-radius: 8px;
+    }
+    h2 {
+      color: #007bff;
+      margin-bottom: 1rem;
+    }
+    form {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+      align-items: center;
+    }
+    input[type="date"],
+    input[type="time"] {
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      flex: 1 1 120px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.3s ease;
+      flex-shrink: 0;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    ul#timesheetList {
+      list-style: none;
+      padding-left: 0;
+    }
+    ul#timesheetList li {
+      background: #e9f0ff;
+      padding: 0.8rem 1rem;
+      margin-bottom: 0.8rem;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+    ul#timesheetList li span {
+      flex-grow: 1;
+    }
+    ul#timesheetList li button {
+      background-color: #dc3545;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.9rem;
+    }
+    ul#timesheetList li button.edit-btn {
+      background-color: #17a2b8;
+    }
+    #logoutBtn {
+      background-color: #6c757d;
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      border: none;
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      transition: background-color 0.3s ease;
+    }
+    #logoutBtn:hover {
+      background-color: #5a6268;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="images/logo.png" alt="NOVA Racing Logo" />
+    <h1>NOVA Racing</h1>
+  </header>
+
+  <button id="logoutBtn">Logout</button>
+
+  <main>
+    <h2>Time Sheet</h2>
+    <form id="timeForm">
+      <input type="date" id="dateInput" required />
+      <input type="time" id="startInput" required />
+      <input type="time" id="endInput" required />
+      <button type="submit" id="doneBtn">Done</button>
+    </form>
+
+    <ul id="timesheetList"></ul>
+  </main>
+
+  <script>
+    const loggedInUser = localStorage.getItem('loggedInUser');
+    if (!loggedInUser || loggedInUser === 'admin') {
+      window.location.href = 'login.html';
+    }
+
+    const timesheetsKey = 'timesheets';
+    let timesheets = JSON.parse(localStorage.getItem(timesheetsKey) || '{}');
+    if (!timesheets[loggedInUser]) {
+      timesheets[loggedInUser] = [];
+      localStorage.setItem(timesheetsKey, JSON.stringify(timesheets));
+    }
+
+    const timeForm = document.getElementById('timeForm');
+    const dateInput = document.getElementById('dateInput');
+    const startInput = document.getElementById('startInput');
+    const endInput = document.getElementById('endInput');
+    const timesheetList = document.getElementById('timesheetList');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    let editIndex = null;
+
+    function renderTimesheets() {
+      timesheetList.innerHTML = '';
+      timesheets[loggedInUser].forEach((entry, index) => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <span>${entry.date} — ${entry.startTime} to ${entry.endTime}</span>
+          <button class="edit-btn" onclick="editEntry(${index})">Edit</button>
+          <button onclick="deleteEntry(${index})">Delete</button>
+        `;
+        timesheetList.appendChild(li);
+      });
+    }
+
+    window.editEntry = function(index) {
+      const entry = timesheets[loggedInUser][index];
+      dateInput.value = entry.date;
+      startInput.value = entry.startTime;
+      endInput.value = entry.endTime;
+      editIndex = index;
+      document.getElementById('doneBtn').textContent = 'Save';
+    }
+
+    window.deleteEntry = function(index) {
+      if (confirm('Delete this time entry?')) {
+        timesheets[loggedInUser].splice(index, 1);
+        localStorage.setItem(timesheetsKey, JSON.stringify(timesheets));
+        renderTimesheets();
+      }
+    }
+
+    timeForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const date = dateInput.value;
+      const startTime = startInput.value;
+      const endTime = endInput.value;
+
+      if (editIndex !== null) {
+        timesheets[loggedInUser][editIndex] = { date, startTime, endTime };
+        editIndex = null;
+        document.getElementById('doneBtn').textContent = 'Done';
+      } else {
+        timesheets[loggedInUser].push({ date, startTime, endTime });
+      }
+      localStorage.setItem(timesheetsKey, JSON.stringify(timesheets));
+      timeForm.reset();
+      renderTimesheets();
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem('loggedInUser');
+      window.location.href = 'login.html';
+    });
+
+    renderTimesheets();
+  </script>
+</body>
+</html>

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Panel - NOVA Racing</title>
+  <style>
+    /* Modern light theme */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f9fafb;
+      margin: 0;
+      padding: 30px;
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+      color: #222;
+    }
+    h1 {
+      text-align: center;
+      color: #0d47a1;
+      margin-bottom: 15px;
+    }
+    button {
+      background-color: #1976d2;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.25s ease;
+      font-weight: 600;
+      margin: 5px 4px;
+      font-size: 0.95rem;
+    }
+    button:hover {
+      background-color: #115293;
+    }
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 10px 12px;
+      margin: 8px 0 16px 0;
+      border: 1.5px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease;
+    }
+    input[type="text"]:focus, input[type="password"]:focus {
+      border-color: #1976d2;
+      outline: none;
+    }
+    #errorMsg {
+      color: #b00020;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    ul li {
+      background: white;
+      margin-bottom: 12px;
+      padding: 15px 18px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(25, 118, 210, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 600;
+      font-size: 1rem;
+      color: #333;
+    }
+    ul li button {
+      background-color: #0d47a1;
+      padding: 7px 14px;
+      font-weight: 600;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    ul li button:hover {
+      background-color: #08306b;
+    }
+    #timesheetView {
+      margin-top: 30px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(25, 118, 210, 0.12);
+      padding: 20px 25px;
+      display: none;
+    }
+    #timesheetView h2 {
+      margin-top: 0;
+      color: #0d47a1;
+    }
+    #userTimesheets {
+      margin-top: 15px;
+    }
+    #userTimesheets li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-bottom: 1px solid #ddd;
+      font-weight: 500;
+      color: #444;
+    }
+    #userTimesheets li:last-child {
+      border-bottom: none;
+    }
+    #userTimesheets li button {
+      background-color: #1976d2;
+      padding: 5px 12px;
+      font-size: 0.85rem;
+      margin-left: 8px;
+    }
+    #userTimesheets li button:hover {
+      background-color: #115293;
+    }
+    #timesheetActions {
+      margin-top: 20px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    #timesheetActions button {
+      flex: 1 1 auto;
+      max-width: 220px;
+    }
+    label {
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+    }
+    #selectAllCheckbox {
+      margin-right: 8px;
+    }
+    #adminPassSection {
+      margin-top: 40px;
+    }
+    #adminPassMsg {
+      color: #2e7d32;
+      margin-top: 8px;
+      font-weight: 600;
+    }
+    #topButtons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+  </style>
+</head>
+<body>
+  <h1>NOVA Racing - Admin Panel</h1>
+
+  <div id="topButtons">
+    <button onclick="logout()">Logout</button>
+    <button id="exportExcelBtn">Export All Timesheets to Excel</button>
+  </div>
+
+  <section id="createUserSection">
+    <h2>Create New User</h2>
+    <input type="text" id="newUsername" placeholder="Username" />
+    <input type="password" id="newPassword" placeholder="Password" />
+    <button id="createUserBtn">Create User</button>
+    <div id="errorMsg"></div>
+  </section>
+
+  <section id="usersListSection">
+    <h2>All Users</h2>
+    <ul id="userList"></ul>
+  </section>
+
+  <section id="timesheetView">
+    <h2 id="viewingUser"></h2>
+    <label><input type="checkbox" id="selectAllCheckbox" /> Select All</label>
+    <ul id="userTimesheets"></ul>
+
+    <div id="timesheetActions">
+      <button id="deleteSelectedBtn">Delete Selected</button>
+      <button id="backBtn">Back to User List</button>
+    </div>
+  </section>
+
+  <section id="adminPassSection">
+    <h2>Change Admin Password</h2>
+    <input type="password" id="adminNewPass" placeholder="New Password" />
+    <button onclick="changeAdminPassword()">Change Password</button>
+    <p id="adminPassMsg"></p>
+  </section>
+
+  <script>
+    const users = JSON.parse(localStorage.getItem('users') || '{}');
+    const timesheets = JSON.parse(localStorage.getItem('timesheets') || '{}');
+    const loggedInUser = localStorage.getItem('loggedInUser');
+
+    if (loggedInUser !== 'admin') {
+      window.location.href = 'login.html';
+    }
+
+    const newUsernameInput = document.getElementById('newUsername');
+    const newPasswordInput = document.getElementById('newPassword');
+    const createUserBtn = document.getElementById('createUserBtn');
+    const errorMsgDiv = document.getElementById('errorMsg');
+    const userListUl = document.getElementById('userList');
+
+    const viewingUserH2 = document.getElementById('viewingUser');
+    const userTimesheetsUl = document.getElementById('userTimesheets');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+    const exportExcelBtn = document.getElementById('exportExcelBtn');
+    const backBtn = document.getElementById('backBtn');
+
+    function saveUsers() {
+      localStorage.setItem('users', JSON.stringify(users));
+    }
+
+    function saveTimesheets() {
+      localStorage.setItem('timesheets', JSON.stringify(timesheets));
+    }
+
+    function logout() {
+      localStorage.removeItem('loggedInUser');
+      window.location.href = 'login.html';
+    }
+
+    createUserBtn.addEventListener('click', () => {
+      const newUser = newUsernameInput.value.trim();
+      const newPass = newPasswordInput.value.trim();
+
+      if (!newUser || !newPass) {
+        errorMsgDiv.textContent = 'Username and password required.';
+        return;
+      }
+      if (users[newUser]) {
+        errorMsgDiv.textContent = 'User already exists.';
+        return;
+      }
+
+      users[newUser] = newPass;
+      saveUsers();
+      timesheets[newUser] = [];
+      saveTimesheets();
+
+      alert(`User "${newUser}" created.`);
+      newUsernameInput.value = '';
+      newPasswordInput.value = '';
+      showUserList();
+      errorMsgDiv.textContent = '';
+    });
+
+    function showUserList() {
+      document.getElementById('timesheetView').style.display = 'none';
+      userListUl.innerHTML = '';
+      Object.keys(users).forEach(user => {
+        const li = document.createElement('li');
+        if (user !== 'admin') {
+          li.innerHTML = `
+            <span>${user}</span>
+            <div>
+              <button onclick="showTimesheets('${user}')">View Timesheets</button>
+              <button onclick="promptChangePassword('${user}')">Change Password</button>
+              <button onclick="deleteUser('${user}')">Delete User</button>
+            </div>
+          `;
+        } else {
+          li.textContent = 'admin (Administrator)';
+        }
+        userListUl.appendChild(li);
+      });
+    }
+
+    function showTimesheets(user) {
+      document.getElementById('timesheetView').style.display = 'block';
+      viewingUserH2.textContent = `Timesheets for ${user}`;
+      userTimesheetsUl.innerHTML = '';
+      const entries = timesheets[user] || [];
+      entries.forEach((entry, index) => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <label>
+            <input type="checkbox" class="entryCheckbox" data-index="${index}" />
+            ${entry.date} — ${entry.startTime} to ${entry.endTime}
+          </label>
+          <div>
+            <button onclick="editEntry('${user}', ${index})">Edit</button>
+            <button onclick="deleteEntry('${user}', ${index})">Delete</button>
+          </div>
+        `;
+        userTimesheetsUl.appendChild(li);
+      });
+      selectAllCheckbox.checked = false;
+    }
+
+    window.editEntry = function(user, index) {
+      const entry = timesheets[user][index];
+      const newDate = prompt('Edit Date (YYYY-MM-DD):', entry.date);
+      if (!newDate) return;
+      const newStart = prompt('Edit Start Time (HH:MM):', entry.startTime);
+      if (!newStart) return;
+      const newEnd = prompt('Edit End Time (HH:MM):', entry.endTime);
+      if (!newEnd) return;
+
+      timesheets[user][index] = { date: newDate, startTime: newStart, endTime: newEnd };
+      saveTimesheets();
+      showTimesheets(user);
+    };
+
+    window.deleteEntry = function(user, index) {
+      if (confirm('Delete this entry?')) {
+        timesheets[user].splice(index, 1);
+        saveTimesheets();
+        showTimesheets(user);
+      }
+    };
+
+    deleteSelectedBtn.addEventListener('click', () => {
+      const user = viewingUserH2.textContent.replace('Timesheets for ', '');
+      const checkboxes = document.querySelectorAll('.entryCheckbox:checked');
+      const indexes = Array.from(checkboxes)
+        .map(cb => parseInt(cb.dataset.index))
+        .sort((a, b) => b - a);
+      indexes.forEach(i => timesheets[user].splice(i, 1));
+      saveTimesheets();
+      showTimesheets(user);
+    });
+
+    selectAllCheckbox.addEventListener('change', () => {
+      const checkboxes = document.querySelectorAll('.entryCheckbox');
+      checkboxes.forEach(cb => (cb.checked = selectAllCheckbox.checked));
+    });
+
+    backBtn.addEventListener('click', showUserList);
+
+    function promptChangePassword(user) {
+      const newPass = prompt(`Enter new password for ${user}:`);
+      if (newPass) {
+        users[user] = newPass;
+        saveUsers();
+        alert('Password changed.');
+      }
+    }
+
+    function deleteUser(user) {
+      if (confirm(`Delete user '${user}'? This cannot be undone.`)) {
+        delete users[user];
+        delete timesheets[user];
+        saveUsers();
+        saveTimesheets();
+        showUserList();
+      }
+    }
+
+    function changeAdminPassword() {
+      const newPass = document.getElementById('adminNewPass').value.trim();
+      if (!newPass) {
+        document.getElementById('adminPassMsg').textContent = 'Password cannot be empty.';
+        return;
+      }
+      users['admin'] = newPass;
+      saveUsers();
+      document.getElementById('adminPassMsg').textContent = 'Admin password changed.';
+      document.getElementById('adminNewPass').value = '';
+    }
+
+    exportExcelBtn.addEventListener('click', () => {
+      let csvContent = 'data:text/csv;charset=utf-8,';
+      csvContent += 'Username,Date,Start Time,End Time\n';
+
+      Object.keys(timesheets).forEach(user => {
+        timesheets[user].forEach(entry => {
+          const row = [user, entry.date, entry.startTime, entry.endTime].join(',');
+          csvContent += row + '\n';
+        });
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', 'nova_racing_timesheets.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+
+    showUserList();
+  </script>
+</body>
+</html>
