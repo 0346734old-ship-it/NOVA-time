@@ -2,198 +2,154 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>NOVA Racing - Time Sheet</title>
+  <title>Timesheet - NOVA Racing</title>
   <link rel="stylesheet" href="css/styles.css" />
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#007bff" />
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f4f6f8;
+      background-color: #f4f4f4;
       margin: 0;
-      padding: 20px;
-      color: #333;
+      padding: 2rem;
     }
-    header {
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .logo-title {
       display: flex;
       align-items: center;
       gap: 1rem;
-      margin-bottom: 20px;
     }
-    header img {
+
+    .logo-title img {
       height: 50px;
-      width: 50px;
-      object-fit: contain;
     }
-    header h1 {
-      font-size: 2rem;
-      margin: 0;
-      color: #007bff;
+
+    h1 {
+      font-size: 1.8rem;
+      color: #222;
     }
-    /* Style for timesheet form */
-    .timesheet-container {
-      max-width: 600px;
-      margin: 0 auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-      font-weight: 600;
-    }
-    input[type="date"],
-    input[type="time"] {
-      width: 100%;
-      padding: 8px;
-      margin-top: 4px;
-      box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    button.primary-btn {
-      margin-top: 15px;
-      padding: 10px 20px;
-      background-color: #007bff;
-      border: none;
+
+    .logout-btn {
+      background-color: #e74c3c;
       color: white;
-      font-weight: 700;
-      border-radius: 5px;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .logout-btn:hover {
+      background-color: #c0392b;
+    }
+
+    .timesheet-form input {
+      margin-right: 10px;
+      padding: 0.4rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    .timesheet-form button {
+      padding: 0.4rem 1rem;
+      border: none;
+      background-color: #3498db;
+      color: white;
+      border-radius: 6px;
       cursor: pointer;
     }
-    button.primary-btn:hover {
-      background-color: #0056b3;
+
+    ul#entryList {
+      margin-top: 1rem;
+      list-style-type: none;
+      padding: 0;
     }
-    table {
-      width: 100%;
-      margin-top: 20px;
-      border-collapse: collapse;
-    }
-    table, th, td {
-      border: 1px solid #ddd;
-    }
-    th, td {
-      padding: 8px;
-      text-align: center;
-    }
-    #exportBtn {
-      margin-bottom: 15px;
-      background-color: #28a745;
-    }
-    #exportBtn:hover {
-      background-color: #1e7e34;
+
+    ul#entryList li {
+      padding: 0.6rem;
+      background-color: #fff;
+      margin-bottom: 0.5rem;
+      border-radius: 6px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
     }
   </style>
 </head>
 <body>
-  <header>
-    <img src="images/logo.png" alt="NOVA Racing Logo" />
-    <h1>NOVA Racing</h1>
-  </header>
-
-  <div class="timesheet-container">
-    <button id="exportBtn" class="primary-btn">Export to Excel</button>
-    <form id="timeSheetForm">
-      <label for="date">Date</label>
-      <input type="date" id="date" required />
-      
-      <label for="startTime">Start Time</label>
-      <input type="time" id="startTime" required />
-      
-      <label for="endTime">End Time</label>
-      <input type="time" id="endTime" required />
-      
-      <button type="submit" class="primary-btn">Save Entry</button>
-    </form>
-
-    <table id="timeSheetTable">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Start Time</th>
-          <th>End Time</th>
-          <th>Hours</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Entries will appear here -->
-      </tbody>
-    </table>
+  <div class="header">
+    <div class="logo-title">
+      <img src="images/logo.png" alt="NOVA Racing Logo" />
+      <h1>NOVA Racing Timesheet</h1>
+    </div>
+    <button id="logoutBtn" class="logout-btn">Logout</button>
   </div>
 
-  <script>
-    const form = document.getElementById('timeSheetForm');
-    const tableBody = document.querySelector('#timeSheetTable tbody');
-    const exportBtn = document.getElementById('exportBtn');
+  <h2 id="welcomeText"></h2>
 
-    // Load existing entries from localStorage
-    let entries = JSON.parse(localStorage.getItem('timesheetEntries') || '[]');
+  <div class="timesheet-form">
+    <input type="date" id="dateInput" />
+    <input type="time" id="startTimeInput" />
+    <input type="time" id="endTimeInput" />
+    <button onclick="addEntry()">Add Entry</button>
+  </div>
+
+  <ul id="entryList"></ul>
+
+  <script>
+    const user = localStorage.getItem('loggedInUser');
+    if (!user) {
+      window.location.href = 'login.html';
+    }
+
+    document.getElementById('welcomeText').textContent = `Welcome, ${user}!`;
+
+    const logoutBtn = document.getElementById('logoutBtn');
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem('loggedInUser');
+      window.location.href = 'login.html';
+    });
+
+    const timesheets = JSON.parse(localStorage.getItem('timesheets') || '{}');
+    if (!timesheets[user]) timesheets[user] = [];
+
+    function saveTimesheets() {
+      localStorage.setItem('timesheets', JSON.stringify(timesheets));
+    }
 
     function renderEntries() {
-      tableBody.innerHTML = '';
-      entries.forEach(entry => {
-        const tr = document.createElement('tr');
-        const hours = calculateHours(entry.startTime, entry.endTime);
-        tr.innerHTML = `
-          <td>${entry.date}</td>
-          <td>${entry.startTime}</td>
-          <td>${entry.endTime}</td>
-          <td>${hours.toFixed(2)}</td>
-        `;
-        tableBody.appendChild(tr);
+      const list = document.getElementById('entryList');
+      list.innerHTML = '';
+      timesheets[user].forEach((entry, index) => {
+        const li = document.createElement('li');
+        li.textContent = `${entry.date} — ${entry.startTime} to ${entry.endTime}`;
+        list.appendChild(li);
       });
     }
 
-    function calculateHours(start, end) {
-      const startDate = new Date('1970-01-01T' + start + 'Z');
-      const endDate = new Date('1970-01-01T' + end + 'Z');
-      let diff = (endDate - startDate) / (1000 * 60 * 60);
-      if (diff < 0) diff += 24; // handle overnight shifts
-      return diff;
-    }
+    function addEntry() {
+      const date = document.getElementById('dateInput').value;
+      const startTime = document.getElementById('startTimeInput').value;
+      const endTime = document.getElementById('endTimeInput').value;
 
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      const date = document.getElementById('date').value;
-      const startTime = document.getElementById('startTime').value;
-      const endTime = document.getElementById('endTime').value;
-
-      entries.push({ date, startTime, endTime });
-      localStorage.setItem('timesheetEntries', JSON.stringify(entries));
-      renderEntries();
-      form.reset();
-    });
-
-    exportBtn.addEventListener('click', () => {
-      if (!entries.length) {
-        alert('No entries to export.');
+      if (!date || !startTime || !endTime) {
+        alert('Please fill in all fields.');
         return;
       }
-      // Generate CSV
-      let csv = 'Date,Start Time,End Time,Hours\n';
-      entries.forEach(e => {
-        const hours = calculateHours(e.startTime, e.endTime);
-        csv += `${e.date},${e.startTime},${e.endTime},${hours.toFixed(2)}\n`;
-      });
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'timesheet.csv';
-      a.click();
-      URL.revokeObjectURL(url);
-    });
+
+      timesheets[user].push({ date, startTime, endTime });
+      saveTimesheets();
+      renderEntries();
+
+      document.getElementById('dateInput').value = '';
+      document.getElementById('startTimeInput').value = '';
+      document.getElementById('endTimeInput').value = '';
+    }
 
     renderEntries();
-
-    // Register service worker for PWA
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js')
-        .then(() => console.log('Service Worker registered'))
-        .catch(err => console.error('Service Worker registration failed:', err));
-    }
   </script>
 </body>
 </html>
